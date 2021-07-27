@@ -1468,7 +1468,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     int l1match=-1;
     int l2match=-1;
     int ivar=0;
-    double delr = 0.7;  //// After seeing plots
+    double delr = 0.7;  //// updated after seeing plots
 
     for (int jk=0; jk<vleptons.size(); jk++) {
       int ityp = (vleptons[jk].lepton_id==2) ? 4 : 5;
@@ -1488,7 +1488,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     }
     
     if (LJets.size()>1) { 
-      double delr = 0.6;
+      double delr = 0.7; //// updated after seeing plots
       for (int jk=ivar; jk<vleptons.size(); jk++) {
 	int ityp = (vleptons[jk].lepton_id==2) ? 6 : 7;
 	double dr = delta2R(LJets[1].y, LJets[1].phi, vleptons[jk].eta, vleptons[jk].phi);
@@ -1696,7 +1696,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 		}
 		
 		if (LJets.size()>1) { 
-			double delr = 0.6;
+			double delr = 0.8;  //// updated after seeing plots
 			for (int jk=ivar; jk<Jets.size(); jk++) {
 				double dr = delta2R(LJets[1].y, LJets[1].phi, Jets[jk].eta, Jets[jk].phi);
 				hist_prptangle[3]->Fill(LJets[1].pt, dr,weight);
@@ -2016,9 +2016,9 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     {
       lepakmatch = min(delta2R(LJets[0].y,LJets[0].phi,Jets[1].y,Jets[1].phi), delta2R(LJets[1].y,LJets[1].phi,Jets[1].y,Jets[1].phi));
       hist_prvar[13]->Fill(lepakmatch, weight);
-      if (lepakmatch >0.6)  return kFALSE;
-    }
+      if (lepakmatch >0.8)  return kFALSE;   // updated after seeing plots 
   //  if (!(delta2R(LJets[0].y,LJets[0].phi,Jets[1].y,Jets[1].phi) < 0.6 || delta2R(LJets[1].y,LJets[1].phi,Jets[1].y,Jets[1].phi) < 0.6)) return kFALSE;
+    }
   hist_count->Fill(13,weight);
 
 
