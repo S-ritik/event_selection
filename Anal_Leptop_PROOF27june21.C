@@ -1931,7 +1931,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 
 			double tmprat1 = (fmu1v-Trvmu).Mag()/max(1.e-6,fmu1v.Mag());
 			double tmprat2 = (fmu2v-Trvmu).Mag()/max(1.e-6,fmu2v.Mag());
-			
+			 
       hist_init[0]->Fill(tmprat1, weight);
       hist_init[1]->Fill(tmprat2, weight);
       
@@ -2138,7 +2138,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 
   int nAK4inAK8=0;
   float ptsum(0.);
-  bool found=false;  /// found i mean that wehether it is found that leading ak4 jet not match
+  bool found=false;  /// whether we have found the leading extra ak4 jet or not
   int extra_leadak4_index=-1;
   for(int ijet=0;ijet<Jets.size();ijet++)
     {
