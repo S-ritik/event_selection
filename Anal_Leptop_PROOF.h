@@ -1848,21 +1848,22 @@ class Anal_Leptop_PROOF : public TSelector {
 	int obs_nbins[nobshist] = {25,25,25,25,25,25,25,25,60,20,20,20,40,40,2,2,2,2,25,25,25,25
 														 ,25,25,25,25,25,25,25,25,25,60,20,20,20,40,40,2,2,2,2,25,25,25,25,25,25};
 	
+    static const int nhistbtag=14;
+    TH1D *hist_obs_btag[nhistbtag];
+    const char *obsnames_btag[nhistbtag] = {"NHad1_med_btagcut","neuhad1_med_btagcut","sdmass1_med_btagcut","chrad1_med_btagcut","subhaddiff1_med_btagcut","tau21_1_med_btagcut","tau32_1_med_btagcut","NHad2_med_btagcut","neuhad2_med_btagcut","sdmass2_med_btagcut","chrad2_med_btagcut","subhaddiff2_med_btagcut","tau21_2_med_btagcut","tau32_2_med_btagcut"};
 
-    TH1D *hist_obs_btag[14];
-    const char *obsnames_btag[14] = {"NHad1_med_btagcut","neuhad1_med_btagcut","sdmass1_med_btagcut","chrad1_med_btagcut","subhaddiff1_med_btagcut","tau21_1_med_btagcut","tau32_1_med_btagcut","NHad2_med_btagcut","neuhad2_med_btagcut","sdmass2_med_btagcut","chrad2_med_btagcut","subhaddiff2_med_btagcut","tau21_2_med_btagcut","tau32_2_med_btagcut"};
+    double obs_low_btag[nhistbtag] = {0,0,0,-0.15,0,0,0,0,0,0,-0.15,0,0,0};
+	double obs_up_btag[nhistbtag] = {1,1,300,0.15,1,1,1,1,1,300,0.15,1,1,1};
+	int obs_nbins_btag[nhistbtag] = {30,30,30,60,30,30,30,30,30,30,60,30,30,30};
 
-    double obs_low_btag[14] = {0,0,0,-0.15,0,0,0,0,0,0,-0.15,0,0,0};
-	double obs_up_btag[14] = {1,1,300,0.15,1,1,1,1,1,300,0.15,1,1,1};
-	int obs_nbins_btag[14] = {30,30,30,60,30,30,30,30,30,30,60,30,30,30};
+        static const int nhistgenmatch=14;
+    TH1D *hist_obs_genmatch[nhistgenmatch];
+    const char *obsnames_genmatch[nhistgenmatch] = {"NHad1_genmatch","neuhad1_genmatch","sdmass1_genmatch","chrad1_genmatch","subhaddiff1_genmatch","tau21_1_genmatch","tau32_1_genmatch","NHad2_genmatch","neuhad2_genmatch","sdmass2_genmatch","chrad2_genmatch","subhaddiff2_genmatch","tau21_2_genmatch","tau32_2_genmatch"};
 
-    TH1D *hist_obs_genmatch[14];
-    const char *obsnames_genmatch[14] = {"NHad1_genmatch","neuhad1_genmatch","sdmass1_genmatch","chrad1_genmatch","subhaddiff1_genmatch","tau21_1_genmatch","tau32_1_genmatch","NHad2_genmatch","neuhad2_genmatch","sdmass2_genmatch","chrad2_genmatch","subhaddiff2_genmatch","tau21_2_genmatch","tau32_2_genmatch"};
+    double obs_low_genmatch[nhistgenmatch] = {0,0,0,-0.3,0,0,0,0,0,0,-0.3,0,0,0};
+	double obs_up_genmatch[nhistgenmatch] = {1,1,300,0.3,1,1,1,1,1,300,0.3,1,1,1};
 
-    double obs_low_genmatch[14] = {0,0,0,-0.3,0,0,0,0,0,0,-0.3,0,0,0};
-	double obs_up_genmatch[14] = {1,1,300,0.3,1,1,1,1,1,300,0.3,1,1,1};
-
-	int obs_nbins_genmatch[14] = {30,30,30,60,30,30,30,30,30,30,60,30,30,30};
+	int obs_nbins_genmatch[nhistgenmatch] = {30,30,30,60,30,30,30,30,30,30,60,30,30,30};
 	TH1D *hist_init_pu_sys[18][2]={{0}};
 
 	//  const char *new_var_names[9] = {"M_l1l2","rat_l1l2","deltaPhi_l1l2","l1pt_wrtjet","l2pt_wrtjet","MET","MET_{#eta}","delta_phil1_met","delta_phil2_met"};
@@ -1954,8 +1955,8 @@ class Anal_Leptop_PROOF : public TSelector {
     TMVA::Reader *reader4;
     
       TString testdir = "/home/deroy/t3store3/CMSSW_10_5_0/src/BDTResponse_validator/Analysis/newvar_sv/Signal/";
-    TString dir = "/home/rsaxena/t3store3/Muon_MuEl/";
-    //TString dir = "/home/ritik/Desktop/code2/";
+    //TString dir = "/home/rsaxena/t3store3/Muon_MuEl/";
+    TString dir = "/home/ritik/Desktop/code2/";
   /*  TString weightfile1 = testdir + TString("TMVAClassification_BDTG_elIDvarv3.weights.xml");
     //TString weightfile1 = dir + TString("TMVAClassification_BDTG_elIDvar_Jan2021Corr_TTbarUL18.weights.xml");
     TString weightfile2 = dir + TString("TMVAClassification_BDTG_rnu.weights.xml");

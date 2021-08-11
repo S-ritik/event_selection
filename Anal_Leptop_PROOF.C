@@ -57,11 +57,11 @@ void Anal_Leptop_PROOF::SlaveBegin(TTree * /*tree*/)
     }
   
   isMC = true;
-  isTT = true;
+  isTT = false;
   isST = false;
   isDIB = false;
   isWJ = false;
-  isDY = false;
+  isDY = true;
   isbQCD = false;
 	//GMA
 	//  Tout = new TTree("leptop","leptop");
@@ -197,7 +197,7 @@ void Anal_Leptop_PROOF::SlaveBegin(TTree * /*tree*/)
     */
   }
 	
-  for(int lvar=0; lvar<47; lvar++){
+  for(int lvar=0; lvar<nobshist; lvar++){
     char lnamein[1000];
     sprintf(lnamein,"Obs_%s",obsnames[lvar]);
     hist_obs[lvar] = new TH1D(lnamein,lnamein,obs_nbins[lvar],obs_low[lvar],obs_up[lvar]);
@@ -205,14 +205,14 @@ void Anal_Leptop_PROOF::SlaveBegin(TTree * /*tree*/)
 		
   }
 
-  for(int lvar=0; lvar<14; lvar++){
+  for(int lvar=0; lvar<nhistbtag; lvar++){
     char lnamein[1000];
     sprintf(lnamein,"Obs_%s",obsnames_btag[lvar]);
     hist_obs_btag[lvar] = new TH1D(lnamein,lnamein,obs_nbins_btag[lvar],obs_low_btag[lvar],obs_up_btag[lvar]);
     hist_obs_btag[lvar]->Sumw2();
   }
 
-  for(int lvar=0; lvar<14; lvar++){
+  for(int lvar=0; lvar<nhistgenmatch; lvar++){
     char lnamein[1000];
     sprintf(lnamein,"Obs_%s",obsnames_genmatch[lvar]);
     hist_obs_genmatch[lvar] = new TH1D(lnamein,lnamein,obs_nbins_genmatch[lvar],obs_low_genmatch[lvar],obs_up_genmatch[lvar]);
@@ -252,12 +252,12 @@ void Anal_Leptop_PROOF::SlaveBegin(TTree * /*tree*/)
   char title[1000];
   sprintf(name,"N_PV");
   sprintf(title,"# of Primary Vertices");
-  hist_npv = new TH1D(name,title,100,-0.1,99.9);//80,-0.1,79.9);
+  hist_npv = new TH1D(name,title,100,-0.5,99.5);//80,-0.1,79.9);
   hist_npv->Sumw2();
     
   sprintf(name,"N_PV_nopuwt");
   sprintf(title,"# of Primary Vertices");
-  hist_npv_nopuwt = new TH1D(name,title,100,-0.1,99.9);
+  hist_npv_nopuwt = new TH1D(name,title,100,-0.5,99.5);
   hist_npv_nopuwt->Sumw2();
   
   hist_2D_msd_deepak8 = new TH2D("hist_2D_msd_deepak8","hist_2D_msd_deepak8",25,0,300,25,0,1);
@@ -458,7 +458,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     }
   }
        
-  if(isMC){
+  if(isMC && isTT){
     
     for(int igen=0; igen<ngenparticles; igen++){
       if(abs(genpartstatus[igen])!=23 && genpartstatus[igen]!=1) continue;
@@ -827,7 +827,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     sJet.closebymu = false;
     sJet.closebyel = false;
     
-    for(int imu=0; imu<vmuons.size(); imu++)
+    for(int imu=0; imu<(int)vmuons.size(); imu++)
       {
 	double delr = delta2R(pfjetAK4eta[ijet], pfjetAK4phi[ijet], vmuons[imu].eta, vmuons[imu].phi);
 	hist_prptangle[1]->Fill(pfjetAK4pt[ijet], delr,weight);
@@ -847,7 +847,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
       }
     
     if (sJet.pt<0) {
-      for(int ie=0; ie<velectrons.size(); ie++) {
+      for(int ie=0; ie<(int)velectrons.size(); ie++) {
 	double delr = delta2R(pfjetAK4eta[ijet],pfjetAK4phi[ijet], velectrons[ie].eta, velectrons[ie].phi);
 	hist_prptangle[0]->Fill(pfjetAK4pt[ijet], delr,weight);
 	if (delr < 0.4) {
@@ -872,10 +872,10 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
       sJet.phi = pfjetAK4phi[ijet];
     }
     
-    hist_prptvar[1][min(ntcount-1,ijet)]->Fill(min(float(2.99), max(float(-2.99), pfjetAK4eta[ijet])), min(ybins[nybin]-1.0, max(ybins[0]+0.1, double(pfjetAK4pt[ijet]))),weight);
+    hist_prptvar[1][min(ntcount-1,ijet)]->Fill(min(float(2.99), max(float(-2.99), sJet.eta)), min(ybins[nybin]-1.0, max(ybins[0]+0.1, double(sJet.pt))),weight);
     
-    if(fabs(pfjetAK4eta[ijet])>2.5) continue;
-    if(pfjetAK4pt[ijet]<30.) continue;
+    if(fabs(sJet.eta) > 2.5) continue;
+    if(sJet.pt < 30.) continue;
     
     //    Event_HT += pfjetAK4pt[ijet];
     sJet.jetid = pfjetAK4jetID[ijet];
@@ -937,7 +937,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     */
   }
 
-  for (int ij = 0; ij<bjv.size(); ij++) {
+  for (int ij = 0; ij<(int)bjv.size(); ij++) {
     hist_prptvar[2][min(ntcount-1,ij)]->Fill(min(2.99, max(-2.99, bjv[ij].Rapidity())), min(ybins[nybin]-1.0, max(ybins[0]+0.1, bjv[ij].Pt())),weight);
   }
   //*****//
@@ -1053,7 +1053,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     LJet.hasleptop_alldecay = LJet.hashadtop_alldecay = false;
     
     LJet.haspfelectron = LJet.haspfmuon = false;
-    LJet.matchAK4deepb = LJet.re_tvsb = LJet.rmu_tvsb = -100;
+    LJet.matchAK4deepb = LJet.re_tvsb = LJet.rmu_tvsb = -99;
     
     LJets.push_back(LJet);
     
@@ -1064,7 +1064,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   sorted_by_pt(LJets);
   
   for(unsigned ijet=0; ijet<LJets.size(); ijet++){
-    if(isMC){
+    if(isMC && isTT){
       for(int ngen=0; ngen<ngenelc; ngen++)
 	{
 	  if(delta2R(LJets[ijet].y,LJets[ijet].phi,genelectroneta[ngen],genelectronphi[ngen])<0.7){
@@ -1211,76 +1211,76 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   
   for(unsigned ijet=0; ijet<LJets.size(); ijet++){
     /*
-      if(isnan(LJets[ijet].pt)) {LJets[ijet].pt = -100; }
-      if(isnan(LJets[ijet].y)) { LJets[ijet].y = -100; }
-      if(isnan(LJets[ijet].mass)) { LJets[ijet].mass = -100; }
-      if(isnan(LJets[ijet].phi)) { LJets[ijet].phi = -100; }
+      if(isnan(LJets[ijet].pt)) {LJets[ijet].pt = -99; }
+      if(isnan(LJets[ijet].y)) { LJets[ijet].y = -99; }
+      if(isnan(LJets[ijet].mass)) { LJets[ijet].mass = -99; }
+      if(isnan(LJets[ijet].phi)) { LJets[ijet].phi = -99; }
       
-      if(isnan(LJets[ijet].btag_DeepCSV)) { LJets[ijet].btag_DeepCSV = -100; }
-      if(isnan(LJets[ijet].matchAK4deepb)) { LJets[ijet].matchAK4deepb = -100; }
-      if(isnan(LJets[ijet].DeepTag_TvsQCD)) { LJets[ijet].DeepTag_TvsQCD = -100; }
-      if(isnan(LJets[ijet].DeepTag_WvsQCD)) { LJets[ijet].DeepTag_WvsQCD = -100; }
-      if(isnan(LJets[ijet].DeepTag_ZvsQCD)) { LJets[ijet].DeepTag_ZvsQCD = -100; }
+      if(isnan(LJets[ijet].btag_DeepCSV)) { LJets[ijet].btag_DeepCSV = -99; }
+      if(isnan(LJets[ijet].matchAK4deepb)) { LJets[ijet].matchAK4deepb = -99; }
+      if(isnan(LJets[ijet].DeepTag_TvsQCD)) { LJets[ijet].DeepTag_TvsQCD = -99; }
+      if(isnan(LJets[ijet].DeepTag_WvsQCD)) { LJets[ijet].DeepTag_WvsQCD = -99; }
+      if(isnan(LJets[ijet].DeepTag_ZvsQCD)) { LJets[ijet].DeepTag_ZvsQCD = -99; }
       
-      if(isnan(LJets[ijet].CHF)) { LJets[ijet].CHF = -100; }
-      if(isnan(LJets[ijet].NHF)) { LJets[ijet].NHF = -100; }
-      if(isnan(LJets[ijet].CEMF)) { LJets[ijet].CEMF = -100; }
-      if(isnan(LJets[ijet].NEMF)) { LJets[ijet].NEMF = -100; }
-      if(isnan(LJets[ijet].MUF)) { LJets[ijet].MUF = -100; }
-      if(isnan(LJets[ijet].NHadF)) { LJets[ijet].NHadF = -100; }
-      if(isnan(LJets[ijet].EMF)) { LJets[ijet].EMF = -100; }
-      if(isnan(LJets[ijet].neuemfrac)) { LJets[ijet].neuemfrac = -100; }
-      if(isnan(LJets[ijet].neunhadfrac)) { LJets[ijet].neunhadfrac = -100; }
-      if(isnan(LJets[ijet].EEM)) { LJets[ijet].EEM = -100; }
+      if(isnan(LJets[ijet].CHF)) { LJets[ijet].CHF = -99; }
+      if(isnan(LJets[ijet].NHF)) { LJets[ijet].NHF = -99; }
+      if(isnan(LJets[ijet].CEMF)) { LJets[ijet].CEMF = -99; }
+      if(isnan(LJets[ijet].NEMF)) { LJets[ijet].NEMF = -99; }
+      if(isnan(LJets[ijet].MUF)) { LJets[ijet].MUF = -99; }
+      if(isnan(LJets[ijet].NHadF)) { LJets[ijet].NHadF = -99; }
+      if(isnan(LJets[ijet].EMF)) { LJets[ijet].EMF = -99; }
+      if(isnan(LJets[ijet].neuemfrac)) { LJets[ijet].neuemfrac = -99; }
+      if(isnan(LJets[ijet].neunhadfrac)) { LJets[ijet].neunhadfrac = -99; }
+      if(isnan(LJets[ijet].EEM)) { LJets[ijet].EEM = -99; }
       
-      if(isnan(LJets[ijet].chrad)) { LJets[ijet].chrad = -100; }
-      if(isnan(LJets[ijet].tau21)) { LJets[ijet].tau21 = -100; }
-      if(isnan(LJets[ijet].tau32)) { LJets[ijet].tau32 = -100; }
-      if(isnan(LJets[ijet].sdmass)) { LJets[ijet].sdmass = -100; }
+      if(isnan(LJets[ijet].chrad)) { LJets[ijet].chrad = -99; }
+      if(isnan(LJets[ijet].tau21)) { LJets[ijet].tau21 = -99; }
+      if(isnan(LJets[ijet].tau32)) { LJets[ijet].tau32 = -99; }
+      if(isnan(LJets[ijet].sdmass)) { LJets[ijet].sdmass = -99; }
       
-      if(isnan(LJets[ijet].elinsubpt)) { LJets[ijet].elinsubpt = -100; }
-      if(isnan(LJets[ijet].elinsubeta)) { LJets[ijet].elinsubeta = -100; }
-      if(isnan(LJets[ijet].elinsubphi)) { LJets[ijet].elinsubphi = -100; }
-      if(isnan(LJets[ijet].elinsubjpt)) { LJets[ijet].elinsubjpt = -100; }
-      if(isnan(LJets[ijet].elinsubjeta)) { LJets[ijet].elinsubjeta = -100; }
-      if(isnan(LJets[ijet].elinsubjphi)) { LJets[ijet].elinsubjphi = -100; }
-      if(isnan(LJets[ijet].elinsubjmass)) { LJets[ijet].elinsubjmass = -100; }
+      if(isnan(LJets[ijet].elinsubpt)) { LJets[ijet].elinsubpt = -99; }
+      if(isnan(LJets[ijet].elinsubeta)) { LJets[ijet].elinsubeta = -99; }
+      if(isnan(LJets[ijet].elinsubphi)) { LJets[ijet].elinsubphi = -99; }
+      if(isnan(LJets[ijet].elinsubjpt)) { LJets[ijet].elinsubjpt = -99; }
+      if(isnan(LJets[ijet].elinsubjeta)) { LJets[ijet].elinsubjeta = -99; }
+      if(isnan(LJets[ijet].elinsubjphi)) { LJets[ijet].elinsubjphi = -99; }
+      if(isnan(LJets[ijet].elinsubjmass)) { LJets[ijet].elinsubjmass = -99; }
       
-      if(isnan(LJets[ijet].muinsubpt)) { LJets[ijet].muinsubpt = -100; }
-      if(isnan(LJets[ijet].muinsubeta)) { LJets[ijet].muinsubeta = -100; }
-      if(isnan(LJets[ijet].muinsubphi)) { LJets[ijet].muinsubphi = -100; }
-      if(isnan(LJets[ijet].muinsubjpt)) { LJets[ijet].muinsubjpt = -100; }
-      if(isnan(LJets[ijet].muinsubjeta)) { LJets[ijet].muinsubjeta = -100; }
-      if(isnan(LJets[ijet].muinsubjphi)) { LJets[ijet].muinsubjphi = -100; }
-      if(isnan(LJets[ijet].muinsubjmass)) { LJets[ijet].muinsubjmass = -100; }
+      if(isnan(LJets[ijet].muinsubpt)) { LJets[ijet].muinsubpt = -99; }
+      if(isnan(LJets[ijet].muinsubeta)) { LJets[ijet].muinsubeta = -99; }
+      if(isnan(LJets[ijet].muinsubphi)) { LJets[ijet].muinsubphi = -99; }
+      if(isnan(LJets[ijet].muinsubjpt)) { LJets[ijet].muinsubjpt = -99; }
+      if(isnan(LJets[ijet].muinsubjeta)) { LJets[ijet].muinsubjeta = -99; }
+      if(isnan(LJets[ijet].muinsubjphi)) { LJets[ijet].muinsubjphi = -99; }
+      if(isnan(LJets[ijet].muinsubjmass)) { LJets[ijet].muinsubjmass = -99; }
       
-      if(isnan(LJets[ijet].muinsubI0)) { LJets[ijet].muinsubI0 = -100; }
-      if(isnan(LJets[ijet].muinsubInear)) { LJets[ijet].muinsubInear = -100; }
-      if(isnan(LJets[ijet].muinsubIfar)) { LJets[ijet].muinsubIfar = -100; }
+      if(isnan(LJets[ijet].muinsubI0)) { LJets[ijet].muinsubI0 = -99; }
+      if(isnan(LJets[ijet].muinsubInear)) { LJets[ijet].muinsubInear = -99; }
+      if(isnan(LJets[ijet].muinsubIfar)) { LJets[ijet].muinsubIfar = -99; }
       
-      if(isnan(LJets[ijet].sub1mass)) { LJets[ijet].sub1mass = -100; }
-      if(isnan(LJets[ijet].sub1btag)) { LJets[ijet].sub1btag = -100; }
-      if(isnan(LJets[ijet].sub1hadfrac)) { LJets[ijet].sub1hadfrac = -100; }
-      if(isnan(LJets[ijet].sub1emfrac)) { LJets[ijet].sub1emfrac = -100; }
-      if(isnan(LJets[ijet].sub2mass)) { LJets[ijet].sub2mass = -100; }
-      if(isnan(LJets[ijet].sub2btag)) { LJets[ijet].sub2btag = -100; }
-      if(isnan(LJets[ijet].sub2hadfrac)) { LJets[ijet].sub2hadfrac = -100; }
-      if(isnan(LJets[ijet].sub2emfrac)) { LJets[ijet].sub2emfrac = -100; }
+      if(isnan(LJets[ijet].sub1mass)) { LJets[ijet].sub1mass = -99; }
+      if(isnan(LJets[ijet].sub1btag)) { LJets[ijet].sub1btag = -99; }
+      if(isnan(LJets[ijet].sub1hadfrac)) { LJets[ijet].sub1hadfrac = -99; }
+      if(isnan(LJets[ijet].sub1emfrac)) { LJets[ijet].sub1emfrac = -99; }
+      if(isnan(LJets[ijet].sub2mass)) { LJets[ijet].sub2mass = -99; }
+      if(isnan(LJets[ijet].sub2btag)) { LJets[ijet].sub2btag = -99; }
+      if(isnan(LJets[ijet].sub2hadfrac)) { LJets[ijet].sub2hadfrac = -99; }
+      if(isnan(LJets[ijet].sub2emfrac)) { LJets[ijet].sub2emfrac = -99; }
     
-      if(isnan(LJets[ijet].subhaddiff)) { LJets[ijet].subhaddiff = -100; }
-      if(isnan(LJets[ijet].subemdiff)) { LJets[ijet].subemdiff = -100; }
-      if(isnan(LJets[ijet].subptdiff)) { LJets[ijet].subptdiff = -100; }
-      if(isnan(LJets[ijet].subbtag)) { LJets[ijet].subbtag = -100; }
+      if(isnan(LJets[ijet].subhaddiff)) { LJets[ijet].subhaddiff = -99; }
+      if(isnan(LJets[ijet].subemdiff)) { LJets[ijet].subemdiff = -99; }
+      if(isnan(LJets[ijet].subptdiff)) { LJets[ijet].subptdiff = -99; }
+      if(isnan(LJets[ijet].subbtag)) { LJets[ijet].subbtag = -99; }
       
-      if(isnan(LJets[ijet].haselectron)) { LJets[ijet].haselectron = -100; }
-      if(isnan(LJets[ijet].haspfelectron)) { LJets[ijet].haspfelectron = -100; }
-      if(isnan(LJets[ijet].hasmuon)) { LJets[ijet].hasmuon = -100; }
-      if(isnan(LJets[ijet].haspfmuon)) { LJets[ijet].haspfmuon = -100; }
+      if(isnan(LJets[ijet].haselectron)) { LJets[ijet].haselectron = -99; }
+      if(isnan(LJets[ijet].haspfelectron)) { LJets[ijet].haspfelectron = -99; }
+      if(isnan(LJets[ijet].hasmuon)) { LJets[ijet].hasmuon = -99; }
+      if(isnan(LJets[ijet].haspfmuon)) { LJets[ijet].haspfmuon = -99; }
       
-      if(isnan(LJets[ijet].hasleptop)) { LJets[ijet].hasleptop = -100; }
-      if(isnan(LJets[ijet].hashadtop)) { LJets[ijet].hashadtop = -100; }
-      if(isnan(LJets[ijet].hasqg)) { LJets[ijet].hasqg = -100; }
-      if(isnan(LJets[ijet].hasb)) { LJets[ijet].hasb = -100; }
+      if(isnan(LJets[ijet].hasleptop)) { LJets[ijet].hasleptop = -99; }
+      if(isnan(LJets[ijet].hashadtop)) { LJets[ijet].hashadtop = -99; }
+      if(isnan(LJets[ijet].hasqg)) { LJets[ijet].hasqg = -99; }
+      if(isnan(LJets[ijet].hasb)) { LJets[ijet].hasb = -99; }
     */
     // in_mupfjetAK8NHadF = -999;                                                   
     // in_mupfjetAK8neunhadfrac = -999;
@@ -1391,7 +1391,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   
     // LJets[ijet].hasmatche = false;
     
-    // if (LJets[ijet].elinsubeta >-99) { //!= -100 && LJets[ijet].elinsubphi != -100) {
+    // if (LJets[ijet].elinsubeta >-100) { //!= -100 && LJets[ijet].elinsubphi != -100) {
 		// 	if (velectrons.size() > 0) {
 		// 		float dR_min(0.4); int nearest(-1);
 		// 		for(unsigned el=0; el<velectrons.size(); el++){
@@ -1537,7 +1537,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     int ivar=0;
     double delr = 0.7;  //// updated after seeing plots
 
-    for (int jk=0; jk<vleptons.size(); jk++) {
+    for (int jk=0; jk<(int)vleptons.size(); jk++) {
       int ityp = (vleptons[jk].lepton_id==2) ? 4 : 5;
       double dr = delta2R(LJets[0].y, LJets[0].phi, vleptons[jk].eta, vleptons[jk].phi);
       hist_prptangle[ityp]->Fill(LJets[0].pt, dr,weight);
@@ -1556,7 +1556,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     
     if (LJets.size()>1) { 
       double delr = 0.7; //// updated after seeing plots
-      for (int jk=ivar; jk<vleptons.size(); jk++) {
+      for (int jk=ivar; jk<(int)vleptons.size(); jk++) {
 	int ityp = (vleptons[jk].lepton_id==2) ? 6 : 7;
 	double dr = delta2R(LJets[1].y, LJets[1].phi, vleptons[jk].eta, vleptons[jk].phi);
 	hist_prptangle[ityp]->Fill(LJets[1].pt, dr,weight);
@@ -1635,7 +1635,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	  LJets[ij].hasmatche = false;
 	  LJets[ij].hasmatchmu = false;
 	   
-	  if (vleptons.size() >ij) {
+	  if ((int)vleptons.size() >ij) {
 	    
 	    if (vleptons[ij].lepton_id==2) { //Electron
 	    in_pfjetAK8NHadF = LJets[ij].NHadF;
@@ -1713,11 +1713,11 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	      
 	      LJets[ij].rmu_tvsb = reader4->EvaluateMVA("BDTG method");
 	    } //else of if (vleptons[ij].lepton_id==1)
-	  } // if (vleptons.size() >=ij)
+	  } // if ((int)vleptons.size() >=ij)
 	}//for (int ij=0; ij<min(LJets.size(),2); ij++)
 
 	/*  int t_cand = -1;
-  double remax = -100;
+  double remax = -99;
   for(unsigned ijet=0; ijet<LJets.size(); ijet++){
     if(LJets[ijet].re_tvsb > remax){
       remax = LJets[ijet].re_tvsb;
@@ -1727,7 +1727,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   }
 
   int tmu_cand = -1;
-  double rmumax = -100;
+  double rmumax = -99;
   for(unsigned ijet=0; ijet<LJets.size(); ijet++){
     if(LJets[ijet].rmu_tvsb > rmumax){
       rmumax = LJets[ijet].rmu_tvsb;
@@ -1753,7 +1753,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 		int ivar=0;
 		
 		double delr = 0.8;  ///// updated after seeing plots
-		for (int jk=0; jk<Jets.size(); jk++) {
+		for (int jk=0; jk<(int)Jets.size(); jk++) {
 		          double dr = delta2R(LJets[0].y, LJets[0].phi, Jets[jk].eta, Jets[jk].phi);
 			  hist_prptangle[2]->Fill(LJets[0].pt, dr,weight);
 			  if (dr <delr) {
@@ -1774,7 +1774,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 		
 		if (LJets.size()>1) { 
 			double delr = 0.8;  //// updated after seeing plots
-			for (int jk=ivar; jk<Jets.size(); jk++) {
+			for (int jk=ivar; jk<(int)Jets.size(); jk++) {
 				double dr = delta2R(LJets[1].y, LJets[1].phi, Jets[jk].eta, Jets[jk].phi);
 				hist_prptangle[3]->Fill(LJets[1].pt, dr,weight);
 				if (dr <delr) {
@@ -1795,7 +1795,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	}
 	
 	hist_prvar[3]->Fill(vleptons.size(), weight);
-	if (vleptons.size()<2)  return kFALSE; //at least two leptons with pT > 30 GeV at this stage
+	if ((int)vleptons.size()<2)  return kFALSE; //at least two leptons with pT > 30 GeV at this stage
 
 	hist_count->Fill(3,weight);
 	bool emu_ch = false;
@@ -1842,7 +1842,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	hist_count->Fill(5,weight);
 
 
-	if (vleptons.size()>0) { hist_prvar[6]->Fill(min(float(359.0),vleptons[0].pt), weight);}
+	if ((int)vleptons.size()>0) { hist_prvar[6]->Fill(min(float(359.0),vleptons[0].pt), weight);}
 	
 #ifdef E_MU_TTBar
   
@@ -2060,16 +2060,16 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 #endif
   //Computation of lepton related Suman's variables//                                         
   TLorentzVector l1(0,0,0,0), l2(0,0,0,0);
-#ifdef E_MU_TTBar
-  l1 = (fmucand.Pt()>felcand.Pt()) ? fmucand : felcand;
-  l2 = (fmucand.Pt()>felcand.Pt()) ? felcand : fmucand;
-#elif defined(E_E_TTBar)
-  l1 = fe1cand;
-  l2 = fe2cand;
-#elif defined(MU_MU_TTBar)
-  l1 = fmu1cand;
-  l2 = fmu2cand;
-#endif
+  //#ifdef E_MU_TTBar
+   l1.SetPtEtaPhiM(vleptons[0].pt,vleptons[0].eta,vleptons[0].phi,(vleptons[0].lepton_id==1) ? 0.105658 : 0.000511);//(fmucand.Pt()>felcand.Pt()) ? fmucand : felcand;
+  l2.SetPtEtaPhiM(vleptons[1].pt,vleptons[1].eta,vleptons[1].phi,(vleptons[1].lepton_id==1) ? 0.105658 : 0.000511);//(fmucand.Pt()>felcand.Pt()) ? felcand : fmucand;
+  //#elif defined(E_E_TTBar)
+  //l1 = fe1cand;
+  //l2 = fe2cand;
+  //#elif defined(MU_MU_TTBar)
+  //l1 = fmu1cand;
+  //l2 = fmu2cand;
+  //#endif
   hist_prvar[10]->Fill(LJets.size(), weight);
   if (LJets.size()<2) return kFALSE;
   if(LJets[0].pt<300 || LJets[1].pt<300) return kFALSE;
@@ -2093,6 +2093,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
       //if (lepakmatch >0.8)  return kFALSE;   // updated after seeing plots 
   //  if (!(delta2R(LJets[0].y,LJets[0].phi,Jets[1].y,Jets[1].phi) < 0.6 || delta2R(LJets[1].y,LJets[1].phi,Jets[1].y,Jets[1].phi) < 0.6)) return kFALSE;
     }
+    else lepakmatch = 10;
   if( delta2R(LJets[0].y,LJets[0].phi, vleptons[0].eta, vleptons[0].phi) <0.7) return kFALSE;
   hist_count->Fill(13,weight);
 
@@ -2118,7 +2119,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   if (Jets[0].pt<180. && itrig_onlysinglee ==1) return kFALSE;
   hist_count->Fill(15,weight);
 
-  M_l1l2= rat_l2pt_l1pt= deltaPhi_l1l2= l1pt_nearjet= l2pt_nearjet= met_pt= met_phi= delta_phil1_met= delta_phil2_met= delta_phibl1_met= delta_phibl2_met= rat_metpt_ak4pt= rat_metpt_ak8pt= rat_metpt_eventHT= mt_of_l1met= mt_of_l2met= no_ak4jets= no_ak4bjets= no_ak8jets= EventHT= extra_ak4j= ptsum_extra_ak4= extra_ak4jqgl= extra_ak4jdeepb= rat_extra_ak4jpt_lpt= ak81pt= ak81y= ak81mass= ak81sdmass= ak81deep_tvsqcd= ak81deep_wvsqcd= ak82pt= ak82y= ak82mass= ak82sdmass= ak82deep_tvsqcd= ak82deep_wvsqcd= M_bl1= M_bl2= M_jl1= M_jl2= delta_phibl1bl2= delta_phijl1jl2= deltaR_l1l2= deltaR_l1j1= deltaR_l2j1= deltaR_l1j2= deltaR_l2j2= j1_btag_sc= j2_btag_sc = ak81NHad = ak81chrad = ak81neuhad = ak81tau21 = ak81subhaddiff = ak81tau32 = ak82NHad = ak82chrad = ak82neuhad = ak82tau21 = ak82subhaddiff = ak82tau32 = ak41pt = ak42pt = -100; 
+  M_l1l2= rat_l2pt_l1pt= deltaPhi_l1l2= l1pt_nearjet= l2pt_nearjet= met_pt= met_phi= delta_phil1_met= delta_phil2_met= delta_phibl1_met= delta_phibl2_met= rat_metpt_ak4pt= rat_metpt_ak8pt= rat_metpt_eventHT= mt_of_l1met= mt_of_l2met= no_ak4jets= no_ak4bjets= no_ak8jets= EventHT= extra_ak4j= ptsum_extra_ak4= extra_ak4jqgl= extra_ak4jdeepb= rat_extra_ak4jpt_lpt= ak81pt= ak81y= ak81mass= ak81sdmass= ak81deep_tvsqcd= ak81deep_wvsqcd= ak82pt= ak82y= ak82mass= ak82sdmass= ak82deep_tvsqcd= ak82deep_wvsqcd= M_bl1= M_bl2= M_jl1= M_jl2= delta_phibl1bl2= delta_phijl1jl2= deltaR_l1l2= deltaR_l1j1= deltaR_l2j1= deltaR_l1j2= deltaR_l2j2= j1_btag_sc= j2_btag_sc = ak81NHad = ak81chrad = ak81neuhad = ak81tau21 = ak81subhaddiff = ak81tau32 = ak82NHad = ak82chrad = ak82neuhad = ak82tau21 = ak82subhaddiff = ak82tau32 = ak41pt = ak42pt = -99; 
   genmatch_sc1 = genmatch_sc2 = topmatchvar = 0; 
   int ixtyp=-1;
   if (vleptons.size()>=2) {
@@ -2214,11 +2215,10 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   float ptsum(0.);
   bool found=false;  /// whether we have found the leading extra ak4 jet or not
   int extra_leadak4_index=-1;
-  for(int ijet=0;ijet<Jets.size();ijet++)
+  for(int ijet=0;ijet<(int)Jets.size();ijet++)
     {
-      for(int fjet=0; fjet<min(2,(int)LJets.size()); fjet++)
-	{
-	  if( delta2R(LJets[fjet].y,LJets[fjet].phi,Jets[ijet].y,Jets[ijet].phi)<0.8 )
+      if( delta2R(LJets[0].y,LJets[0].phi,Jets[ijet].y,Jets[ijet].phi)<0.8  || delta2R(LJets[min(1,(int)LJets.size()-1)].y,LJets[min(1,(int)LJets.size()-1)].phi,Jets[ijet].y,Jets[ijet].phi)<0.8) 
+    //if( delta2R(LJets[fjet].y,LJets[fjet].phi,Jets[ijet].y,Jets[ijet].phi)<0.8 )
 	    {
 	      nAK4inAK8++;
 	      ptsum = ptsum + Jets[ijet].pt;
@@ -2228,17 +2228,17 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	      extra_leadak4_index=ijet;
 	      found=true;
 	    }
-	}
+
     }
   extra_ak4j = Jets.size() - nAK4inAK8;
   ptsum_extra_ak4 = 0;
-    for(int ijet=0;ijet<Jets.size();ijet++)
+  for(int ijet=0;ijet<(int)Jets.size();ijet++)
     {
       ptsum_extra_ak4 = ptsum_extra_ak4 + Jets[ijet].pt;
     }
     ptsum_extra_ak4 = ptsum_extra_ak4 - ptsum;
 
-    if(extra_ak4j>1 && extra_leadak4_index >=0){
+    if(extra_ak4j>=1 && extra_leadak4_index >=0){
                 extra_ak4jqgl = Jets[extra_leadak4_index].qgl;
                 extra_ak4jdeepb = Jets[extra_leadak4_index].btag_DeepFlav;
 		
@@ -2258,7 +2258,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   if (Jets.size()>=2) {
     std::vector<TLorentzVector> allsjets_4v;
     double Pt_sum(0.);
-    for(unsigned ijet=0; ijet<Jets.size(); ijet++){
+    for(unsigned ijet=0; ijet< Jets.size(); ijet++){
       TLorentzVector sjv;
       sjv.SetPtEtaPhiM(Jets[ijet].pt,Jets[ijet].eta,Jets[ijet].phi,Jets[ijet].mass);
       allsjets_4v.push_back(sjv);
@@ -2303,7 +2303,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   ak81deep_tvsqcd = LJets[0].DeepTag_TvsQCD;
   ak81deep_wvsqcd = LJets[0].DeepTag_WvsQCD;
 
-  if (LJets.size()>1 && lepakmatch <0.8) {
+  if (LJets.size()>1 ) {
     ak82pt = LJets[1].pt;
     ak82y = LJets[1].y;
     ak82mass = LJets[1].mass;
@@ -2375,7 +2375,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   ak81tau21 =LJets[0].tau21;
   ak81subhaddiff =LJets[0].subhaddiff;
   ak81tau32 = LJets[0].tau32;
-  if(LJets.size()>1){
+  if(LJets.size()>1 ){
     ak82NHad =LJets[1].NHadF;
     ak82chrad =LJets[1].chrad;
     ak82neuhad =LJets[1].neunhadfrac;
@@ -2452,9 +2452,9 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     {
       hist_obs[21]->Fill(delta2R(LJets[0].eta, LJets[0].phi, Jets[1].eta, Jets[1].phi), weight);
       
-       if (LJets.size()>1 && lepakmatch <0.8  && delta2R(LJets[1].y,LJets[1].phi,vleptons[1].eta,vleptons[1].phi) <0.7) {
+       if (LJets.size()>1 ) {
 	 hist_2d_deltaR_vspt[1]->Fill(LJets[1].pt,delta2R(Jets[1].y,Jets[1].phi,vleptons[1].eta,vleptons[1].phi),weight);
-	 hist_obs[22]->Fill(delta2R(LJets[0].eta, LJets[0].phi, LJets[1].eta, LJets[1].phi), weight);
+	 hist_obs[22]->Fill(delta2R(LJets[0].y, LJets[0].phi, LJets[1].y, LJets[1].phi), weight);
 	 hist_obs[23]->Fill(LJets[1].pt,weight);
 	 hist_obs[24]->Fill(LJets[1].y,weight);
 	 hist_obs[25]->Fill(LJets[1].mass,weight);
@@ -2491,15 +2491,16 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	 hist_obs[34]->Fill(LJets[1].DeepTag_ZvsQCD,weight);
 	 hist_obs[35]->Fill(LJets[1].re_tvsb,weight);
 	 hist_obs[36]->Fill(LJets[1].rmu_tvsb,weight);
-       }
+       
        hist_obs[37]->Fill(LJets[1].haspfelectron,weight);
        hist_obs[38]->Fill(LJets[1].haspfmuon,weight);
        hist_obs[39]->Fill(LJets[1].hasmatche,weight);
        hist_obs[40]->Fill(LJets[1].hasmatchmu,weight);
        hist_obs[41]->Fill(delta2R(LJets[1].eta,LJets[1].phi,l1.Eta(),l1.Phi()),weight);
        hist_obs[42]->Fill(delta2R(LJets[1].eta,LJets[1].phi,l2.Eta(),l2.Phi()),weight);
-       if (Jets.size()>0) hist_obs[43]->Fill(delta2R(LJets[1].eta, LJets[1].phi, Jets[0].eta, Jets[0].phi), weight);
-       if (Jets.size()>1) hist_obs[44]->Fill(delta2R(LJets[1].eta, LJets[1].phi, Jets[1].eta, Jets[1].phi), weight);
+       hist_obs[43]->Fill(delta2R(LJets[1].y, LJets[1].phi, Jets[0].y, Jets[0].phi), weight);
+       hist_obs[44]->Fill(delta2R(LJets[1].y, LJets[1].phi, Jets[1].y, Jets[1].phi), weight);
+       }
     }
 #ifdef E_MU_TTBar
   hist_init[9]->Fill((fmucand + felcand).M(),weight);
