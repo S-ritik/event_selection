@@ -1293,7 +1293,7 @@ class Anal_Leptop_PROOF : public TSelector {
    
    Int_t           ngenjetAK8;
    Float_t         genjetAK8pt[njetmx];
-   
+   Float_t         genjetAK8eta[njetmx];
    Float_t         genjetAK8phi[njetmx];
    Float_t         genjetAK8mass[njetmx];
    Float_t         genjetAK8sdmass[njetmx];
@@ -1623,7 +1623,7 @@ class Anal_Leptop_PROOF : public TSelector {
    TBranch        *b_genmisetsig;   //!
    TBranch        *b_ngenjetAK8;   //!
    TBranch        *b_genjetAK8pt;   //!
-   
+   TBranch        *b_genjetAK8eta;   //!
    TBranch        *b_genjetAK8phi;   //!
    TBranch        *b_genjetAK8mass;   //!
    TBranch        *b_genjetAK8sdmass;   //!
@@ -1887,6 +1887,22 @@ class Anal_Leptop_PROOF : public TSelector {
 	TH1D *hist_npv;
 	TH1D *hist_npv_nopuwt;
 	
+    const static int nhistdeltaR=24;
+    TH1D *hist_genmatch_deltaR[nhistdeltaR];
+    const char *names_genmatch_deltaR[nhistdeltaR] = {"deltaR_genlep_ak8_1","deltaR_genb_ak8_1","deltaR_gentop_ak8_1","deltaR_genlep_ak8_2","deltaR_genb_ak8_2","deltaR_gentop_ak8_2","deltaR_neargenlep_ak8_1","deltaR_neargenb_ak8_1","deltaR_neargentop_ak8_1","deltaR_neargenlep_ak8_2","deltaR_neargenb_ak8_2","deltaR_neargentop_ak8_2","deltaR_genlep_ak8_1_withbtagging","deltaR_genb_ak8_1_withbtagging","deltaR_gentop_ak8_1_withbtagging","deltaR_genlep_ak8_2_withbtagging","deltaR_genb_ak8_2_withbtagging","deltaR_gentop_ak8_2_withbtagging","deltaR_genlep_genak8_1","deltaR_genb_genak8_1","deltaR_gentop_genak8_1","deltaR_genlep_genak8_2","deltaR_genb_genak8_2","deltaR_gentop_genak8_2"};
+
+    const char *titles_genmatch_deltaR[nhistdeltaR] = {"deltaR(gen lep, leading AK8 jet)","deltaR(gen b, leading AK8 jet)","deltaR(gen top, leading AK8 jet)","deltaR(gen lep, sub leading AK8 jet)","deltaR(gen b, sub leading AK8 jet)","deltaR(gen top, sub leading AK8 jet)","deltaR(gen lep from nearest top, leading AK8 jet)","deltaR(gen b from nearest top, leading AK8 jet)","deltaR(nearest gen top, leading AK8 jet)","deltaR(gen lep from nearest top, sub leading AK8 jet)","deltaR(gen b from nearest top, sub leading AK8 jet)","deltaR(nearest gen top, sub leading AK8 jet)","deltaR(gen lep, leading AK8 jet) with med WP of DeepFlav btagging","deltaR(gen b, leading AK8 jet) with med WP of DeepFlav btagging","deltaR(gen top, leading AK8 jet) with med WP of DeepFlav btagging","deltaR(gen lep, sub leading AK8 jet) with med WP of DeepFlav btagging","deltaR(gen b, sub leading AK8 jet) with med WP of DeepFlav btagging","deltaR(gen top, sub leading AK8 jet) with med WP of DeepFlav btagging","deltaR(gen lep, leading gen AK8 jet)","deltaR(gen b, leading gen AK8 jet)","deltaR(gen top, leading gen AK8 jet)","deltaR(gen lep, sub leading gen AK8 jet)","deltaR(gen b, sub leading gen AK8 jet)","deltaR(gen top, sub leading gen AK8 jet)"};
+
+    const static int nhistdrsc=6;
+    TH1D *hist_genmatch_deltaR_score[nhistdrsc];
+    const char *names_genmatch_deltaR_score[nhistdrsc] = {"genmatch_score_ak8_1","genmatch_score_ak8_2","genmatch_bothtop_score","genmatch_score_ak8_1_withbtagging","genmatch_score_ak8_2_withbtagging","genmatch_bothtop_score_withbtagging"};
+
+    const char *titles_genmatch_deltaR_score[nhistdrsc] = {"genmatching score of leading AK8 jet","genmatching score of sub leading AK8 jet","both top matching score","genmatching score of leading AK8 jet without lepton substraction","genmatching score of sub leading AK8 jet without lepton substraction","both top matching score without lepton substraction"};
+
+    const static int nhistbtagcutsflow=17;
+    TH1D *hist_btag_cutflow1[nhistbtagcutsflow];
+    TH1D *hist_btag_cutflow2[nhistbtagcutsflow];
+
     TH2D *hist_2d_deltaR_vsbtagsc[2];
     TH2D *hist_2d_pt_vsbtagsc[4];
     TH2D *hist_2d_deltaR_vspt[2];
@@ -1955,8 +1971,8 @@ class Anal_Leptop_PROOF : public TSelector {
     TMVA::Reader *reader4;
     
       TString testdir = "/home/deroy/t3store3/CMSSW_10_5_0/src/BDTResponse_validator/Analysis/newvar_sv/Signal/";
-    //TString dir = "/home/rsaxena/t3store3/Muon_MuEl/";
-    TString dir = "/home/ritik/Desktop/code2/";
+    TString dir = "/home/rsaxena/t3store3/Muon_MuEl/";
+    //TString dir = "/home/ritik/Desktop/code2/";
   /*  TString weightfile1 = testdir + TString("TMVAClassification_BDTG_elIDvarv3.weights.xml");
     //TString weightfile1 = dir + TString("TMVAClassification_BDTG_elIDvar_Jan2021Corr_TTbarUL18.weights.xml");
     TString weightfile2 = dir + TString("TMVAClassification_BDTG_rnu.weights.xml");
@@ -2173,7 +2189,7 @@ void Anal_Leptop_PROOF::Init(TTree *tree)
    
    fChain->SetBranchAddress("ngenjetAK8", &ngenjetAK8, &b_ngenjetAK8);
    fChain->SetBranchAddress("genjetAK8pt", genjetAK8pt, &b_genjetAK8pt);
-   
+   fChain->SetBranchAddress("genjetAK8eta", genjetAK8eta, &b_genjetAK8eta);
    fChain->SetBranchAddress("genjetAK8phi", genjetAK8phi, &b_genjetAK8phi);
    fChain->SetBranchAddress("genjetAK8mass", genjetAK8mass, &b_genjetAK8mass);
    fChain->SetBranchAddress("genjetAK8sdmass", genjetAK8sdmass, &b_genjetAK8sdmass);

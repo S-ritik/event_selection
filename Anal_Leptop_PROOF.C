@@ -57,11 +57,11 @@ void Anal_Leptop_PROOF::SlaveBegin(TTree * /*tree*/)
     }
   
   isMC = true;
-  isTT = false;
+  isTT = true;
   isST = false;
   isDIB = false;
   isWJ = false;
-  isDY = true;
+  isDY = false;
   isbQCD = false;
 	//GMA
 	//  Tout = new TTree("leptop","leptop");
@@ -212,13 +212,40 @@ void Anal_Leptop_PROOF::SlaveBegin(TTree * /*tree*/)
     hist_obs_btag[lvar]->Sumw2();
   }
 
-  for(int lvar=0; lvar<nhistgenmatch; lvar++){
-    char lnamein[1000];
-    sprintf(lnamein,"Obs_%s",obsnames_genmatch[lvar]);
-    hist_obs_genmatch[lvar] = new TH1D(lnamein,lnamein,obs_nbins_genmatch[lvar],obs_low_genmatch[lvar],obs_up_genmatch[lvar]);
-    hist_obs_genmatch[lvar]->Sumw2();		
+
+  for(int lvar=0; lvar<nhistbtagcutsflow; lvar++){
+    char lnamein[1000],ltitlein[1000];
+    sprintf(lnamein,"hist_btag_score_ak41_cut_%s",((string)to_string(lvar)).c_str());
+    sprintf(ltitlein,"btag score of leading AK8 jet after cut no %s",((string)to_string(lvar+1)).c_str());
+    hist_btag_cutflow1[lvar] = new TH1D(lnamein,ltitlein,60,0,1);
+    hist_btag_cutflow1[lvar]->Sumw2();		
   }
-    
+  for(int lvar=0; lvar<nhistbtagcutsflow; lvar++){
+    char lnamein[1000],ltitlein[1000];
+    sprintf(lnamein,"hist_btag_score_ak42_cut_%s",((string)to_string(lvar)).c_str());
+    sprintf(ltitlein,"btag score of sub leading AK8 jet after cut no %s",((string)to_string(lvar+1)).c_str());
+    hist_btag_cutflow2[lvar] = new TH1D(lnamein,ltitlein,60,0,1);
+    hist_btag_cutflow2[lvar]->Sumw2();		
+  }
+
+  for(int lvar=0; lvar<nhistdeltaR; lvar++){
+    char lnamein[1000],ltitlein[1000];
+    sprintf(lnamein,"hist_%s",names_genmatch_deltaR[lvar]);
+    sprintf(ltitlein,"%s",titles_genmatch_deltaR[lvar]);
+    hist_genmatch_deltaR[lvar] = new TH1D(lnamein,ltitlein,60,0,6.5);
+    hist_genmatch_deltaR[lvar]->Sumw2();		
+  }
+  
+
+  for(int lvar=0; lvar<nhistdrsc; lvar++){
+    char lnamein[1000],ltitlein[1000];
+    sprintf(lnamein,"hist_%s",names_genmatch_deltaR_score[lvar]);
+    sprintf(ltitlein,"%s",titles_genmatch_deltaR_score[lvar]);
+    if(lvar==2 || lvar==5)    hist_genmatch_deltaR_score[lvar] = new TH1D(lnamein,ltitlein,111,-5,1105);
+    else                      hist_genmatch_deltaR_score[lvar] = new TH1D(lnamein,ltitlein,223,-0.5,222.5);
+    hist_genmatch_deltaR_score[lvar]->Sumw2();		
+  }
+  
   hist_2d_deltaR_vsbtagsc[0]=new TH2D("hist_2D_deltaR_vsbtagsc_1","deltaR(leading AK4 jet, leading AK8 jet) vs b tag score of leading AK4 jet",60,0,1,60,0,6);
   hist_2d_deltaR_vsbtagsc[0]->Sumw2();
   hist_2d_deltaR_vsbtagsc[1]=new TH2D("hist_2D_deltaR_vsbtagsc_2","deltaR(sub-leading AK4 jet, sub-leading AK8 jet) vs b tag score of sub-leading AK4 jet",60,0,1,60,0,6);
@@ -1515,7 +1542,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     vlepton.phi = vfmuons[imu].phi;
     vlepton.charge = vfmuons[imu].charge;
     vlepton.lepton_id = 1;
-		vlepton.indexemu = imu; 
+    vlepton.indexemu = imu; 
     vleptons.push_back(vlepton);
   }
   for(unsigned ie=0; ie<vfelectrons.size(); ie++){
@@ -1530,7 +1557,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   }
   sorted_by_pt(vleptons);
 
-	//Match lepton with Ak8 jets and order according to leading two AK8 jets
+  //Match lepton with Ak8 jets and order according to leading two AK8 jets
   if (LJets.size()>0) { 
     int l1match=-1;
     int l2match=-1;
@@ -1572,7 +1599,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
       vleptons.erase(vleptons.begin()+l2match);
       vleptons.insert(vleptons.begin()+1, tmplep);
     }
-  }  
+    }  
 	for (int ij=0; ij<min(int(LJets.size()),2); ij++) {
 	  //Muon
 	  in_mupfjetAK8NHadF = -999;
@@ -1735,6 +1762,10 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
       tmu_cand = ijet;
     }
     }*/
+	
+	if(Jets.size()>0)    hist_btag_cutflow1[0]->Fill(Jets[0].btag_DeepFlav,weight);
+	if(Jets.size()>1)    hist_btag_cutflow2[0]->Fill(Jets[1].btag_DeepFlav,weight);
+
 	if( Jets.size()>0 && LJets.size()>0){
 	  j1_btag_sc_ptsort=Jets[0].btag_DeepFlav;
 	  hist_2d_deltaR_vsbtagsc[0]->Fill(j1_btag_sc_ptsort,delta2R(LJets[0].y, LJets[0].phi, Jets[0].eta, Jets[0].phi),weight);
@@ -1793,10 +1824,15 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 			LJets[1].matchAK4deepb = Jets[1].btag_DeepFlav;
 		}
 	}
-	
+
+	if(Jets.size()>0)    hist_btag_cutflow1[1]->Fill(Jets[0].btag_DeepFlav,weight);
+	if(Jets.size()>1)    hist_btag_cutflow2[1]->Fill(Jets[1].btag_DeepFlav,weight);
+
 	hist_prvar[3]->Fill(vleptons.size(), weight);
 	if ((int)vleptons.size()<2)  return kFALSE; //at least two leptons with pT > 30 GeV at this stage
 
+	if(Jets.size()>0)    hist_btag_cutflow1[2]->Fill(Jets[0].btag_DeepFlav,weight);
+	if(Jets.size()>1)    hist_btag_cutflow2[2]->Fill(Jets[1].btag_DeepFlav,weight);
 	hist_count->Fill(3,weight);
 	bool emu_ch = false;
 	bool mumu_ch = false;
@@ -1815,7 +1851,9 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 #elif defined(MU_MU_TTBar)
 	if(!mumu_ch) return kFALSE;
 #endif
-	
+
+  if(Jets.size()>0)    hist_btag_cutflow1[3]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[3]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(4,weight);
   //Now comes individual channel the triggers consideration//   
   bool itrigll_pass = false;
@@ -1839,6 +1877,9 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 
 	hist_prvar[5]->Fill(int(itrigll_pass), weight);
 	if(!itrigll_pass) return kFALSE;
+
+	if(Jets.size()>0)    hist_btag_cutflow1[4]->Fill(Jets[0].btag_DeepFlav,weight);
+	if(Jets.size()>1)    hist_btag_cutflow2[4]->Fill(Jets[1].btag_DeepFlav,weight);
 	hist_count->Fill(5,weight);
 
 
@@ -2031,12 +2072,17 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   if (!(fmu1cand.Pt()>mu1pt && fmu2cand.Pt()>mu2pt)) return kFALSE;
 #endif
   
+  if(Jets.size()>0)    hist_btag_cutflow1[5]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[5]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(6,weight);
 
   // ***** leptons should be oppositely charged****
   hist_prvar[7]->Fill(vleptons[0].charge*vleptons[1].charge, weight);
    if ((vleptons[0].charge*vleptons[1].charge)>0) return kFALSE;
-  hist_count->Fill(7,weight);
+   
+   if(Jets.size()>0)    hist_btag_cutflow1[6]->Fill(Jets[0].btag_DeepFlav,weight);
+   if(Jets.size()>1)    hist_btag_cutflow2[6]->Fill(Jets[1].btag_DeepFlav,weight);
+   hist_count->Fill(7,weight);
   
   // ***no other 3rd lepton other than the selected lepton set***
 
@@ -2044,18 +2090,32 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	hist_prvar[9]->Fill(nmuons);
 #ifdef E_MU_TTBar  
   if (nmuons>1) return kFALSE;
+  if(Jets.size()>0)    hist_btag_cutflow1[7]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[7]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(8,weight);
+  
+  if(Jets.size()>0)    hist_btag_cutflow1[8]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[8]->Fill(Jets[1].btag_DeepFlav,weight);
   if (nelecs>1) return kFALSE;
   hist_count->Fill(9,weight);
 #elif defined(E_E_TTBar)
-  if (nmuons>=1) return kFALSE;
+   if (nmuons>=1) return kFALSE;
+    if(Jets.size()>0)    hist_btag_cutflow1[7]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[7]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(8,weight);
   if (nelecs>2) return kFALSE;
+  if(Jets.size()>0)    hist_btag_cutflow1[8]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[8]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(9,weight);
 #elif defined(MU_MU_TTBar)
   if (nmuons>2) return kFALSE;
+   if(Jets.size()>0)    hist_btag_cutflow1[7]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[7]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(8,weight);
   if (nelecs>=1) return kFALSE;
+   if(Jets.size()>0)    hist_btag_cutflow1[8]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[8]->Fill(Jets[1].btag_DeepFlav,weight);
+
   hist_count->Fill(9,weight);
 #endif
   //Computation of lepton related Suman's variables//                                         
@@ -2073,16 +2133,22 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   hist_prvar[10]->Fill(LJets.size(), weight);
   if (LJets.size()<2) return kFALSE;
   if(LJets[0].pt<300 || LJets[1].pt<300) return kFALSE;
+  if(Jets.size()>0)    hist_btag_cutflow1[9]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[9]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(10,weight);
   
     hist_prvar[11]->Fill(Jets.size(), weight);
   if (Jets.size()<2) return kFALSE;
+  if(Jets.size()>0)    hist_btag_cutflow1[10]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[10]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(11,weight);
   //GMA
   double lepakmatch =delta2R(LJets[0].y,LJets[0].phi,Jets[0].y,Jets[0].phi);
   hist_prvar[12]->Fill(lepakmatch);
   //  if (!(delta2R(LJets[0].y,LJets[0].phi,Jets[0].y,Jets[0].phi) < 0.6 || delta2R(LJets[1].y,LJets[1].phi,Jets[0].y,Jets[0].phi) < 0.6)) return kFALSE;
   if (lepakmatch >0.8)  return kFALSE;  // updated after seeing plots
+  if(Jets.size()>0)    hist_btag_cutflow1[11]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[11]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(12,weight);
 
 
@@ -2095,12 +2161,16 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     }
     else lepakmatch = 10;
   if( delta2R(LJets[0].y,LJets[0].phi, vleptons[0].eta, vleptons[0].phi) <0.7) return kFALSE;
+  if(Jets.size()>0)    hist_btag_cutflow1[12]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[12]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(13,weight);
 
 
   hist_prvar[14]->Fill(bjv.size(), weight);
   //GMA   if (nbjetAK4<1) return kFALSE; 	if (bjv.size()<1) return kFALSE;
   if (Jets[0].btag_DeepFlav <0 && Jets[1].btag_DeepFlav <0) return kFALSE; //  deep_btag_cut
+  if(Jets.size()>0)    hist_btag_cutflow1[13]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[13]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(14,weight);
 
 
@@ -2117,6 +2187,8 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 
 
   if (Jets[0].pt<180. && itrig_onlysinglee ==1) return kFALSE;
+  if(Jets.size()>0)    hist_btag_cutflow1[14]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[14]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(15,weight);
 
   M_l1l2= rat_l2pt_l1pt= deltaPhi_l1l2= l1pt_nearjet= l2pt_nearjet= met_pt= met_phi= delta_phil1_met= delta_phil2_met= delta_phibl1_met= delta_phibl2_met= rat_metpt_ak4pt= rat_metpt_ak8pt= rat_metpt_eventHT= mt_of_l1met= mt_of_l2met= no_ak4jets= no_ak4bjets= no_ak8jets= EventHT= extra_ak4j= ptsum_extra_ak4= extra_ak4jqgl= extra_ak4jdeepb= rat_extra_ak4jpt_lpt= ak81pt= ak81y= ak81mass= ak81sdmass= ak81deep_tvsqcd= ak81deep_wvsqcd= ak82pt= ak82y= ak82mass= ak82sdmass= ak82deep_tvsqcd= ak82deep_wvsqcd= M_bl1= M_bl2= M_jl1= M_jl2= delta_phibl1bl2= delta_phijl1jl2= deltaR_l1l2= deltaR_l1j1= deltaR_l2j1= deltaR_l1j2= deltaR_l2j2= j1_btag_sc= j2_btag_sc = ak81NHad = ak81chrad = ak81neuhad = ak81tau21 = ak81subhaddiff = ak81tau32 = ak82NHad = ak82chrad = ak82neuhad = ak82tau21 = ak82subhaddiff = ak82tau32 = ak41pt = ak42pt = -99; 
@@ -2133,6 +2205,8 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 
   //***** invariant mass of lepton at least more than 20 GeV as resolved analysis cut****
   if (M_l1l2 < 20.) return kFALSE;
+  if(Jets.size()>0)    hist_btag_cutflow1[15]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[15]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(16,weight);
   
   //Computation of selected lepton related variables (Suman's proposal)
@@ -2328,44 +2402,159 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   j1_btag_sc = Jets[0].btag_DeepFlav;
   j2_btag_sc = Jets[1].btag_DeepFlav;
 
-  int itopf=-1;
-  if(topblep[0][0] >-1 && topblep[0][0]>-1){
-  if(genpartpt[topblep[0][0]] < genpartpt[topblep[1][0]])
-    itopf=1;
-  else itopf=0;}
-  for(int it=0;it<2;it++)
-    {
-      if(topblep[it][0]>-1 && topblep[it][1] >-1 && topblep[it][2]>-1)
-	{
-	  if( delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][2]],genpartphi[topblep[it][2]]) < 0.7)
-	    genmatch_sc1 += 1;
-
-	  if(delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][1]],genpartphi[topblep[it][1]]) < 0.8)
-	    genmatch_sc1 += 10;
-	  
-	  if(delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][0]],genpartphi[topblep[it][0]]) <  0.8)
-	    {
-	      genmatch_sc1 += 100;
-	      if(itopf == it) topmatchvar+=10000;
-	      else topmatchvar+=1000;
-	    }
-
-	  if(LJets.size()>1){
-	    if(delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][2]],genpartphi[topblep[it][2]]) < 0.7)
-	      genmatch_sc2 += 1;
-	    
-	    if(delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][1]],genpartphi[topblep[it][1]]) < 0.8)
-	      genmatch_sc2 += 10;
-
-	    if(delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][0]],genpartphi[topblep[it][0]]) < 0.8)
-	      {
-		genmatch_sc2 += 100;
-		if(itopf == it) topmatchvar+=100;
-	      else topmatchvar+=10;
-	      }
+  if(isMC){
+    int ijetmax1=-1,ijetmax2=-1;
+    float maxpt1=-100,maxpt2=-100;
+    for(int igen=0;igen<ngenjetAK8;igen++)
+      {
+	if(genjetAK8pt[igen]>maxpt1)
+	  {
+	    ijetmax2=ijetmax1;
+	    ijetmax1=igen;
+	    maxpt2=maxpt1;
+	    maxpt1=genjetAK8pt[igen];
 	  }
-	}
+	else if(genjetAK8pt[igen]>maxpt2)
+	  {
+	    ijetmax2=igen;
+	    maxpt2=genjetAK8pt[igen];
+	  }
+      }
+    int itopf=-1;
+    if(topblep[1][0] >-1 && topblep[0][0]>-1){
+      if(genpartpt[topblep[0][0]] < genpartpt[topblep[1][0]])
+	itopf=1;
+      else itopf=0;
     }
+    double dr;
+
+    /// for selected AK8jets
+    for(int it=0;it<2;it++)
+      {
+	if(topblep[it][0]>-1 && topblep[it][1] >-1 && topblep[it][2]>-1)
+	  {
+	    
+	   dr = delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][2]],genpartphi[topblep[it][2]]);
+	   hist_genmatch_deltaR[0]->Fill(dr,weight);
+	   if(ijetmax1 > -1)  hist_genmatch_deltaR[18]->Fill(delta2R(genjetAK8eta[ijetmax1],genjetAK8phi[ijetmax1],genparteta[topblep[it][2]],genpartphi[topblep[it][2]]),weight);
+	   if( dr < 0.7)
+	     genmatch_sc1 += 1;
+
+	   
+	   dr = delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][1]],genpartphi[topblep[it][1]]);   
+	   hist_genmatch_deltaR[1]->Fill(dr,weight);
+	   if( ijetmax1 > -1)  hist_genmatch_deltaR[19]->Fill(delta2R(genjetAK8eta[ijetmax1],genjetAK8phi[ijetmax1],genparteta[topblep[it][1]],genpartphi[topblep[it][1]]),weight);
+	   if(dr  < 0.8)
+	     genmatch_sc1 += 10;
+	    
+	   dr = delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][0]],genpartphi[topblep[it][0]]);
+	   hist_genmatch_deltaR[2]->Fill(dr,weight);
+	   if( ijetmax1 > -1)  hist_genmatch_deltaR[20]->Fill(delta2R(genjetAK8eta[ijetmax1],genjetAK8phi[ijetmax1],genparteta[topblep[it][0]],genpartphi[topblep[it][0]]),weight);
+	   if(dr <  0.8)
+	     {
+	       genmatch_sc1 += 100;
+	       if(itopf == it) topmatchvar+=10000;
+	       else topmatchvar+=1000;
+	     }
+	   
+	   if(LJets.size()>1 && lepakmatch <0.8  && delta2R(LJets[1].y,LJets[1].phi,vleptons[1].eta,vleptons[1].phi) <0.7){
+	     
+	     dr = delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][2]],genpartphi[topblep[it][2]]);
+	     if( ijetmax2 > -1)  hist_genmatch_deltaR[21]->Fill(delta2R(genjetAK8eta[ijetmax2],genjetAK8phi[ijetmax2],genparteta[topblep[it][2]],genpartphi[topblep[it][2]]),weight);
+	     hist_genmatch_deltaR[3]->Fill(dr,weight);
+	     if(dr < 0.7)
+	       genmatch_sc2 += 1;
+	      
+	     dr = delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][1]],genpartphi[topblep[it][1]]);
+	     if( ijetmax2 > -1)  hist_genmatch_deltaR[22]->Fill(delta2R(genjetAK8eta[ijetmax2],genjetAK8phi[ijetmax2],genparteta[topblep[it][2]],genpartphi[topblep[it][2]]),weight);
+	     hist_genmatch_deltaR[4]->Fill(dr,weight);
+	     if(dr < 0.8)
+	       genmatch_sc2 += 10;
+	      
+	     dr = delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][0]],genpartphi[topblep[it][0]]);
+	     if( ijetmax2 > -1)  hist_genmatch_deltaR[23]->Fill(delta2R(genjetAK8eta[ijetmax2],genjetAK8phi[ijetmax2],genparteta[topblep[it][0]],genpartphi[topblep[it][0]]),weight);
+	     hist_genmatch_deltaR[5]->Fill(dr,weight);
+	     if(dr < 0.8)
+	       {
+		 genmatch_sc2 += 100;
+		 if(itopf == it) topmatchvar+=100;
+		 else topmatchvar+=10;
+	       }
+	   }
+	  }
+      }
+    hist_genmatch_deltaR_score[0]->Fill(genmatch_sc1,weight);
+    hist_genmatch_deltaR_score[1]->Fill(genmatch_sc2,weight);
+    hist_genmatch_deltaR_score[2]->Fill(topmatchvar,weight);
+
+    // For deltaR wrt nearest top only of selected AK8 jets
+
+    hist_genmatch_deltaR[6]->Fill(min(delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[0][2]],genpartphi[topblep[0][2]]),delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[1][2]],genpartphi[topblep[1][2]])),weight);
+    hist_genmatch_deltaR[7]->Fill(min(delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[0][1]],genpartphi[topblep[0][1]]),delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[1][1]],genpartphi[topblep[1][1]])),weight);
+    hist_genmatch_deltaR[8]->Fill(min(delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[0][0]],genpartphi[topblep[0][0]]),delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[1][0]],genpartphi[topblep[1][0]])),weight);
+
+    if(LJets.size()>1 && lepakmatch <0.8  && delta2R(LJets[1].y,LJets[1].phi,vleptons[1].eta,vleptons[1].phi) <0.7){  
+      hist_genmatch_deltaR[9]->Fill(min(delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[0][2]],genpartphi[topblep[0][2]]),delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[1][2]],genpartphi[topblep[1][2]])),weight);
+      hist_genmatch_deltaR[10]->Fill(min(delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[0][1]],genpartphi[topblep[0][1]]),delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[1][1]],genpartphi[topblep[1][1]])),weight);
+      hist_genmatch_deltaR[11]->Fill(min(delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[0][0]],genpartphi[topblep[0][0]]),delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[1][0]],genpartphi[topblep[1][0]])),weight);
+    }
+    //for selected AK8 jet + btagging cut
+    float genmatch_sc13=0,genmatch_sc23=0,topmatchvar3=0;
+    for(int it=0;it<2;it++)
+      {
+	if(topblep[it][0]>-1 && topblep[it][1] >-1 && topblep[it][2]>-1)
+	  {
+	    if(Jets[0].btag_DeepFlav > deep_btag_cut){ 
+	      dr = delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][2]],genpartphi[topblep[it][2]]);
+	      hist_genmatch_deltaR[12]->Fill(dr,weight);
+	      if( dr < 0.7)
+		genmatch_sc13 += 1;
+	    
+	      dr = delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][1]],genpartphi[topblep[it][1]]);   
+	      hist_genmatch_deltaR[13]->Fill(dr,weight);
+
+	      if(dr  < 0.8)
+		genmatch_sc13 += 10;
+	      
+	      dr = delta2R(LJets[0].y,LJets[0].phi,genparteta[topblep[it][0]],genpartphi[topblep[it][0]]);
+	      hist_genmatch_deltaR[14]->Fill(dr,weight);
+	      if(dr <  0.8)
+	     {
+	       genmatch_sc13 += 100;
+	       if(itopf == it) topmatchvar3+=10000;
+	       else topmatchvar3+=1000;
+	     }
+	    }
+	    
+	   if(LJets.size()>1 && lepakmatch <0.8  && delta2R(LJets[1].y,LJets[1].phi,vleptons[1].eta,vleptons[1].phi) <0.7 && Jets[1].btag_DeepFlav > deep_btag_cut){
+	     
+	     dr = delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][2]],genpartphi[topblep[it][2]]);
+	      hist_genmatch_deltaR[15]->Fill(dr,weight);
+	     if(dr < 0.7)
+	       genmatch_sc23 += 1;
+	      
+	     dr = delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][1]],genpartphi[topblep[it][1]]);
+	     hist_genmatch_deltaR[16]->Fill(dr,weight);
+	     if(dr < 0.8)
+	       genmatch_sc23 += 10;
+	      
+	     dr = delta2R(LJets[1].y,LJets[1].phi,genparteta[topblep[it][0]],genpartphi[topblep[it][0]]);
+	     hist_genmatch_deltaR[17]->Fill(dr,weight);
+	     if(dr < 0.8)
+	       {
+		 genmatch_sc23 += 100;
+		 if(itopf == it) topmatchvar3+=100;
+		 else topmatchvar3+=10;
+	       }
+	   }
+	  }
+      }
+    hist_genmatch_deltaR_score[3]->Fill(genmatch_sc13,weight);
+    hist_genmatch_deltaR_score[4]->Fill(genmatch_sc23,weight);
+    hist_genmatch_deltaR_score[5]->Fill(topmatchvar3,weight);
+  }
+
+  
   ak41pt=Jets[0].pt;
   ak42pt=Jets[1].pt;
 
@@ -2385,8 +2574,12 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
   }
      Tnewvar->Fill();
   
-  if (PFMET<50.) return kFALSE; //before it was 70 GeV. 100 GeV on 17th April, 50GeV on June  
+  if (PFMET<50.) return kFALSE; //before it was 70 GeV. 100 GeV on 17th April, 50GeV on June
+  if(Jets.size()>0)    hist_btag_cutflow1[16]->Fill(Jets[0].btag_DeepFlav,weight);
+  if(Jets.size()>1)    hist_btag_cutflow2[16]->Fill(Jets[1].btag_DeepFlav,weight);
   hist_count->Fill(17,weight);
+
+  if(LJets.size()>1 && lepakmatch <0.8  && delta2R(LJets[1].y,LJets[1].phi,vleptons[1].eta,vleptons[1].phi) <0.7)    hist_count->Fill(18,weight);
 
   if( Jets.size()>0 && LJets.size()>0)  hist_2d_pt_vsbtagsc[2]->Fill(LJets[0].pt,Jets[0].btag_DeepFlav,weight);
   if( Jets.size()>1 && LJets.size()>1)  hist_2d_pt_vsbtagsc[3]->Fill(LJets[1].pt,Jets[1].btag_DeepFlav,weight);
@@ -2420,15 +2613,7 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
     hist_obs_btag[6]->Fill(LJets[0].tau32,weight);
   }
   
-  if(LJets[0].hasleptop_alldecay){
-    hist_obs_genmatch[0]->Fill(LJets[0].NHadF,weight);
-    hist_obs_genmatch[1]->Fill(LJets[0].neunhadfrac,weight);
-    hist_obs_genmatch[2]->Fill(LJets[0].sdmass,weight);
-    hist_obs_genmatch[3]->Fill(LJets[0].chrad,weight);
-    hist_obs_genmatch[4]->Fill(LJets[0].subhaddiff,weight);
-    hist_obs_genmatch[5]->Fill(LJets[0].tau21,weight);
-    hist_obs_genmatch[6]->Fill(LJets[0].tau32,weight);
-  }
+
   
  hist_2d_deltaR_vspt[0]->Fill(LJets[0].pt,delta2R(Jets[0].y,Jets[0].phi,vleptons[0].eta,vleptons[0].phi),weight);
   //TString str;                                                                 
@@ -2475,31 +2660,21 @@ Bool_t Anal_Leptop_PROOF::Process(Long64_t entry)
 	   hist_obs_btag[12]->Fill(LJets[1].tau21,weight);
 	   hist_obs_btag[13]->Fill(LJets[1].tau32,weight);
 	 }
-	 
-	 if(LJets[1].hasleptop_alldecay){
-	   hist_obs_genmatch[7]->Fill(LJets[1].NHadF,weight);
-	   hist_obs_genmatch[8]->Fill(LJets[1].neunhadfrac,weight);
-	   hist_obs_genmatch[9]->Fill(LJets[1].sdmass,weight);
-	   hist_obs_genmatch[10]->Fill(LJets[1].chrad,weight);
-	   hist_obs_genmatch[11]->Fill(LJets[1].subhaddiff,weight);
-	   hist_obs_genmatch[12]->Fill(LJets[1].tau21,weight);
-	   hist_obs_genmatch[13]->Fill(LJets[1].tau32,weight);
-	 }
-       
+	        
 	 hist_obs[32]->Fill(LJets[1].DeepTag_TvsQCD,weight);
 	 hist_obs[33]->Fill(LJets[1].DeepTag_WvsQCD,weight);
 	 hist_obs[34]->Fill(LJets[1].DeepTag_ZvsQCD,weight);
 	 hist_obs[35]->Fill(LJets[1].re_tvsb,weight);
 	 hist_obs[36]->Fill(LJets[1].rmu_tvsb,weight);
-       
-       hist_obs[37]->Fill(LJets[1].haspfelectron,weight);
-       hist_obs[38]->Fill(LJets[1].haspfmuon,weight);
-       hist_obs[39]->Fill(LJets[1].hasmatche,weight);
-       hist_obs[40]->Fill(LJets[1].hasmatchmu,weight);
-       hist_obs[41]->Fill(delta2R(LJets[1].eta,LJets[1].phi,l1.Eta(),l1.Phi()),weight);
-       hist_obs[42]->Fill(delta2R(LJets[1].eta,LJets[1].phi,l2.Eta(),l2.Phi()),weight);
-       hist_obs[43]->Fill(delta2R(LJets[1].y, LJets[1].phi, Jets[0].y, Jets[0].phi), weight);
-       hist_obs[44]->Fill(delta2R(LJets[1].y, LJets[1].phi, Jets[1].y, Jets[1].phi), weight);
+	 
+	 hist_obs[37]->Fill(LJets[1].haspfelectron,weight);
+	 hist_obs[38]->Fill(LJets[1].haspfmuon,weight);
+	 hist_obs[39]->Fill(LJets[1].hasmatche,weight);
+	 hist_obs[40]->Fill(LJets[1].hasmatchmu,weight);
+	 hist_obs[41]->Fill(delta2R(LJets[1].eta,LJets[1].phi,l1.Eta(),l1.Phi()),weight);
+	 hist_obs[42]->Fill(delta2R(LJets[1].eta,LJets[1].phi,l2.Eta(),l2.Phi()),weight);
+	 hist_obs[43]->Fill(delta2R(LJets[1].y, LJets[1].phi, Jets[0].y, Jets[0].phi), weight);
+	 hist_obs[44]->Fill(delta2R(LJets[1].y, LJets[1].phi, Jets[1].y, Jets[1].phi), weight);
        }
     }
 #ifdef E_MU_TTBar
