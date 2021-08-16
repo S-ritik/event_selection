@@ -29,7 +29,8 @@ class AK4Jet {
   float  qgl;
   bool   closebymu;
   bool   closebyel;
-
+  float delrlep;
+  float inleppt;
   /*
     float  reso;
     float  reso_up;
