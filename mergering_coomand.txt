@@ -14,10 +14,6 @@ mv result.root mergerd_EE_Summer20UL18_QCD_output.root
 
 mv result.root mergerd_EE_Summer20UL18_DYJets_output.root
 
-./haddws.exe EE_Summer20UL18_TTBar_DiLeptonic_signal_output.root EE_Summer20UL18_TTBar_Hadronic_signal_output.root EE_Summer20UL18_TTBar_SemiLeptonic_signal_output.root 0.0000082434665695638 0.000003465615257656 0.0000024526376562
-
-mv result.root mergerd_EE_Summer20UL18_TTbar_signal_output.root
-
 ./haddws.exe EE_Summer20UL18_TTBar_DiLeptonic_non-signal_output.root EE_Summer20UL18_TTBar_Hadronic_non-signal_output.root EE_Summer20UL18_TTBar_SemiLeptonic_non-signal_output.root 0.0000082434665695638 0.000003465615257656 0.0000024526376562
 
 mv result.root mergerd_EE_Summer20UL18_TTbar_non-signal_output.root
@@ -26,6 +22,10 @@ mv result.root mergerd_EE_Summer20UL18_TTbar_non-signal_output.root
 
 mv result.root mergerd_EE_Summer20UL18_WJets_output.root
 
-./haddws.exe mergerd_EE_Summer20UL18_WJets_output.root mergerd_EE_Summer20UL18_TTbar_non-signal_output.root mergerd_EE_Summer20UL18_DYJets_output.root mergerd_EE_Summer20UL18_QCD_output.root mergerd_EE_Summer20UL18_ST_output.root mergerd_EE_Summer20UL18_DiBoson_output.root 1 1 1 1 1 1
+./haddws.exe EE_Summer20UL18_TTGJets_output.root EE_Summer20UL18_TTZToQQ_output.root EE_Summer20UL18_TTZToLLNuNu_output.root EE_Summer20UL18_TTWJetsToQQ_output.root EE_Summer20UL18_TTWJetsToLNu_output.root 0.00012858316 0.0000500881661 0.00005001548244 0.00066562 0.0000614940
+
+mv result.root mergerd_EE_Summer20UL18_TTX_output.root
+
+./haddws.exe mergerd_EE_Summer20UL18_WJets_output.root mergerd_EE_Summer20UL18_TTbar_non-signal_output.root mergerd_EE_Summer20UL18_DYJets_output.root mergerd_EE_Summer20UL18_QCD_output.root mergerd_EE_Summer20UL18_ST_output.root mergerd_EE_Summer20UL18_DiBoson_output.root mergerd_EE_Summer20UL18_TTX_output.root 1 1 1 1 1 1 1
 
 mv result.root mergerd_EE_Summer20UL18_bkg_output.root
